@@ -1,0 +1,52 @@
+# FastAPI Backend
+fastapi
+uvicorn[standard]
+
+# Database
+sqlalchemy
+asyncpg
+psycopg2-binary
+alembic
+
+# Authentication
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+
+# Environment Variables
+python-dotenv
+
+# Data Processing
+pandas
+numpy
+
+# Validation
+pydantic
+pydantic-settings
+
+# File Handling
+openpyxl
+
+# Neo4j Graph Database
+neo4j
+
+# HTTP Requests
+httpx
+
+# AI Integration
+openai
+
+# Background Tasks (Phase 3)
+celery
+redis
+
+# Machine Learning (Phase 5)
+scikit-learn
+joblib
+
+# Testing
+pytest
+pytest-asyncio
+
+# Utilities
+python-dateutil

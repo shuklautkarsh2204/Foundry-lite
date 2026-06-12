@@ -1,0 +1,16 @@
+add__pycache__/
+*.pyc
+
+venv/
+.env
+
+uploads/
+
+.vscode/
+
+node_modules/
+
+dist/
+build/
+
+*.log
