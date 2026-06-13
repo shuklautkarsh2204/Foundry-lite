@@ -2,7 +2,8 @@ from fastapi import APIRouter, UploadFile, Depends
 from sqlalchemy.orm import Session
 import pandas as pd
 import os
-
+from database.session import SessionLocal
+from models.datasrc import DataSource
 from services.schema_detector import detect_schema
 from database.session import get_db
 from models.datasrc import DataSource
@@ -51,19 +52,22 @@ async def upload_source(
 
 
 @router.get("/sources")
-def get_sources(
-    db: Session = Depends(get_db)
-):
+def get_sources():
 
-    sources = db.query(DataSource).all()
+    db = SessionLocal()
 
-    return [
-        {
-            "id": source.id,
-            "filename": source.filename,
-            "row_count": source.row_count,
-            "columns": source.columns,
-            "schema": source.schema
-        }
-        for source in sources
-    ]
+    datasets = db.query(DataSource).all()
+
+    result = []
+
+    for dataset in datasets:
+        result.append({
+            "id": dataset.id,
+            "filename": dataset.filename,
+            "row_count": dataset.row_count,
+            "uploaded_at": dataset.uploaded_at
+        })
+
+    db.close()
+
+    return result
