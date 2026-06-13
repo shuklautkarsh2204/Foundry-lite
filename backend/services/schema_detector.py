@@ -1,7 +1,7 @@
 import pandas as pd
 
 def detect_schema(df):
-    schema = []
+    schema = {}
     
     for column in df.columns:
         

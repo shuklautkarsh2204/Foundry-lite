@@ -1,42 +1,69 @@
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, UploadFile, Depends
+from sqlalchemy.orm import Session
 import pandas as pd
 import os
+
 from services.schema_detector import detect_schema
+from database.session import get_db
+from models.datasrc import DataSource
 
 router = APIRouter()
 
-sources = []
-
-
 os.makedirs("uploads", exist_ok=True)
 
+
 @router.post("/upload")
-async def upload_source(file: UploadFile):
-    
+async def upload_source(
+    file: UploadFile,
+    db: Session = Depends(get_db)
+):
+
     filepath = f"uploads/{file.filename}"
-    
+
     with open(filepath, "wb") as f:
         f.write(await file.read())
-    
+
     df = pd.read_csv(filepath)
-    
+
     schema = detect_schema(df)
-    
-    source = {
+
+    data_source = DataSource(
+        filename=file.filename,
+        row_count=len(df),
+        columns=list(df.columns),
+        schema=schema
+    )
+
+    db.add(data_source)
+    db.commit()
+    db.refresh(data_source)
+
+    return {
+        "id": data_source.id,
         "filename": file.filename,
         "rows": len(df),
-        "columns": list(df.columns)
-    }
-    
-    sources.append(source)
-    
-    return {
-        **source,
-        "preview":df.head(5).to_dict(
+        "columns": list(df.columns),
+        "schema": schema,
+        "preview": df.head(5).to_dict(
             orient="records"
         )
     }
 
+
 @router.get("/sources")
-def get_sources():
-    return sources
+def get_sources(
+    db: Session = Depends(get_db)
+):
+
+    sources = db.query(DataSource).all()
+
+    return [
+        {
+            "id": source.id,
+            "filename": source.filename,
+            "row_count": source.row_count,
+            "columns": source.columns,
+            "schema": source.schema
+        }
+        for source in sources
+    ]
