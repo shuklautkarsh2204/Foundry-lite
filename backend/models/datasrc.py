@@ -3,8 +3,7 @@ from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy import JSON
 from sqlalchemy import DateTime
-from sqlalchemy.sql import func
-from datetime import datetime
+from datetime import datetime, UTC
 
 from database.base import Base
 
@@ -22,8 +21,10 @@ class DataSource(Base):
     columns = Column(JSON)
 
     schema = Column(JSON)
+    
+    file_path = Column(String)
 
     uploaded_at = Column(
         DateTime,
-        server_default=func.now()
+        default= lambda: datetime.now(UTC)
     )

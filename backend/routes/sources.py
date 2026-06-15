@@ -32,12 +32,14 @@ async def upload_source(
         filename=file.filename,
         row_count=len(df),
         columns=list(df.columns),
-        schema=schema
+        schema=schema,
+        file_path = filepath
     )
 
     db.add(data_source)
     db.commit()
     db.refresh(data_source)
+    db.close()
 
     return {
         "id": data_source.id,
@@ -46,8 +48,9 @@ async def upload_source(
         "columns": list(df.columns),
         "schema": schema,
         "preview": df.head(5).to_dict(
-            orient="records"
-        )
+            orient="records"  
+        ),
+        "filepath": filepath
     }
 
 
@@ -71,3 +74,47 @@ def get_sources():
     db.close()
 
     return result
+
+@router.get("/{source_id}")
+def get_source(source_id: int):
+    
+    db = SessionLocal()
+    
+    dataset = (
+        db.query(DataSource).filter(DataSource.id == source_id).first()
+    )
+    
+    if not dataset:
+        return {"error": "Dataset not found"}
+    
+    return {
+        "id": dataset.id,
+        "filename": dataset.filename,
+        "columns": dataset.columns,
+        "row_count": dataset.row_count,
+        "schema": dataset.schema,
+        "uploaded_at": dataset.uploaded_at
+    }
+
+@router.get("/{source_id}/preview")
+def preview_source(source_id: int):
+    db = SessionLocal()
+    
+    dataset = (
+        db.query(DataSource).filter(DataSource.id == source_id).first()
+    )
+    
+    if not dataset:
+        db.close()
+        return {"error": "Dataset not found"}
+    
+    df = pd.read_csv(dataset.file_path)
+    
+    preview = df.head(20).to_dict(orient = "records")
+    db.close()
+    
+    return {
+        "id": dataset.id,
+        "filename": dataset.filename,
+        "preview": preview
+    }
