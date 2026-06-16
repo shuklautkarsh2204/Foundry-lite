@@ -7,6 +7,7 @@ from models.datasrc import DataSource
 from services.schema_detector import detect_schema
 from database.session import get_db
 from models.datasrc import DataSource
+from schemas.transformation import FilterRequest, SelectColumnRequest
 
 router = APIRouter()
 
@@ -118,3 +119,111 @@ def preview_source(source_id: int):
         "filename": dataset.filename,
         "preview": preview
     }
+
+@router.post("/{source_id}/filter")
+def filter_dataset(source_id:int, request: FilterRequest):
+    db = SessionLocal()
+    
+    dataset = (db.query(DataSource).filter(DataSource.id == source_id).first())
+    
+    if not dataset:
+        db.close()
+        return{"error":"Dataset not found"}
+    print("1")
+    df = pd.read_csv(dataset.file_path)
+    print("2")
+    ##!!
+    filtered_df = df[
+        df[request.column].astype(str) == request.value
+    ]
+
+    print("3")
+    new_filename = (
+        dataset.filename.replace(
+            ".csv","_filtered.csv"
+        )
+    )
+    print("4")
+    new_filepath = f"uploads/{new_filename}"
+    
+    filtered_df.to_csv(
+    new_filepath,
+    index=False
+    )
+    print("Filter endpoint hit") 
+    print(new_filename) 
+    print(len(filtered_df)) 
+    # Register new dataset
+    new_source = DataSource(
+        filename=new_filename,
+        row_count=len(filtered_df),
+        columns=list(filtered_df.columns),
+        schema=detect_schema(filtered_df),
+        file_path=new_filepath
+    )
+
+    db.add(new_source)
+    db.commit()
+    db.refresh(new_source)
+
+    result = {
+        "new_dataset_id": new_source.id,
+        "filename": new_filename,
+        "rows": len(filtered_df)
+    }
+
+    db.close()
+
+    return result
+
+@router.post("/{source_id}/select-columns")
+def select_columns(source_id:int, request: SelectColumnRequest):
+    db = SessionLocal()
+    
+    dataset = (db.query(DataSource).filter(DataSource.id == source_id).first())
+    
+    if not dataset:
+        db.close()
+        return{"error":"Dataset not found"}
+    
+    df = pd.read_csv(dataset.file_path)
+    
+    selected_df = df[request.columns]
+
+    new_filename = (
+        dataset.filename.replace(
+            ".csv","_selected.csv"
+        )
+    )
+    
+    new_filepath = f"uploads/{new_filename}"
+    
+    selected_df.to_csv(
+    new_filepath,
+    index=False
+    )
+    print("Filter endpoint hit") 
+    print(new_filename) 
+    print(len(selected_df)) 
+    # Register new dataset
+    new_source = DataSource(
+        filename=new_filename,
+        row_count=len(selected_df),
+        columns=list(selected_df.columns),
+        schema=detect_schema(selected_df),
+        file_path=new_filepath
+    )
+
+    db.add(new_source)
+    db.commit()
+    db.refresh(new_source)
+
+    result = {
+        "new_dataset_id": new_source.id,
+        "filename": new_filename,
+        "rows": len(selected_df)
+    }
+
+    db.close()
+
+    return result
