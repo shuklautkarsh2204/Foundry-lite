@@ -6,3 +6,11 @@ class FilterRequest(BaseModel):
     
 class SelectColumnRequest(BaseModel):
     columns: list[str]
+
+class RenameColumnRequest(BaseModel):
+    old_column: str
+    new_column: str
+    
+class SortRequest(BaseModel):
+    column: str
+    ascending: bool

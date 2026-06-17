@@ -7,7 +7,7 @@ from models.datasrc import DataSource
 from services.schema_detector import detect_schema
 from database.session import get_db
 from models.datasrc import DataSource
-from schemas.transformation import FilterRequest, SelectColumnRequest
+from schemas.transformation import FilterRequest, SelectColumnRequest, RenameColumnRequest, SortRequest
 
 router = APIRouter()
 
@@ -222,6 +222,115 @@ def select_columns(source_id:int, request: SelectColumnRequest):
         "new_dataset_id": new_source.id,
         "filename": new_filename,
         "rows": len(selected_df)
+    }
+
+    db.close()
+
+    return result
+
+@router.post("/{source_id}/rename-column")
+def rename_column(
+    source_id: int,
+    request: RenameColumnRequest
+):
+    db = SessionLocal()
+    
+    dataset = (
+        db.query(DataSource)
+        .filter(DataSource.id == source_id)
+        .first()
+    )
+    
+    if not dataset:
+        db.close()
+        return{
+            "error":"Dataset not found"
+        }
+    
+    df = pd.read_csv(dataset.file_path)
+    
+    if request.old_column not in df.columns:
+        db.close()
+        return {
+            "error":f"Column '{request.old_column}' not found"
+        }
+    renamed_df = df.rename(
+        columns = {
+            request.old_column: request.new_column
+        }
+    )
+    new_filename = dataset.filename.replace(".csv","_renamed.csv")
+    new_filepath = f"uploads/{new_filename}"
+    renamed_df.to_csv(new_filepath,index=False)    
+    new_source = DataSource(
+        filename=new_filename,
+        row_count=len(renamed_df),
+        columns=list(renamed_df.columns),
+        schema=detect_schema(renamed_df),
+        file_path=new_filepath
+    )
+
+    db.add(new_source)
+    db.commit()
+    db.refresh(new_source)
+    result = {
+        "new_dataset_id": new_source.id,
+        "filename": new_filename,
+        "rows": len(renamed_df)
+    }
+
+    db.close()
+
+    return result
+
+@router.post("/{source_id}/sort")
+def sort_dataset(
+    source_id:int,
+    request: SortRequest
+):
+    db = SessionLocal()
+    dataset = (
+    db.query(DataSource)
+    .filter(DataSource.id == source_id)
+    .first()
+)
+
+    if not dataset:
+        db.close()
+        return{
+            "error":"Dataset not found"
+        }
+
+    df = pd.read_csv(dataset.file_path)
+
+    if request.column not in df.columns:
+        db.close()
+        return {
+            "error":f"Column '{request.column}' not found"
+        }
+    
+    sorted_df = df.sort_values(
+        by= request.column,
+        ascending = request.ascending
+    )
+    new_filename = dataset.filename.replace(".csv","_sorted.csv")
+    new_filepath = f"uploads/{new_filename}"
+    sorted_df.to_csv(new_filepath,index=False)    
+    new_source = DataSource(
+        filename=new_filename,
+        row_count=len(sorted_df),
+        columns=list(sorted_df.columns),
+        schema=detect_schema(sorted_df),
+        file_path=new_filepath
+    )
+
+    db.add(new_source)
+    db.commit()
+    db.refresh(new_source)
+    result = {
+        "new_dataset_id": new_source.id,
+        "filename": new_filename,
+        "rows": len(sorted_df)
     }
 
     db.close()
