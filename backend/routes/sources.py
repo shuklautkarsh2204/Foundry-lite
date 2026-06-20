@@ -7,7 +7,7 @@ from models.datasrc import DataSource
 from services.schema_detector import detect_schema
 from database.session import get_db
 from models.datasrc import DataSource
-from schemas.transformation import FilterRequest, SelectColumnRequest, RenameColumnRequest, SortRequest
+from schemas.transformation import FilterRequest, SelectColumnRequest, RenameColumnRequest, SortRequest, JoinRequest
 
 router = APIRouter()
 
@@ -335,4 +335,72 @@ def sort_dataset(
 
     db.close()
 
+    return result
+
+@router.post("/join")
+def join_datasets(request: JoinRequest):
+    
+    db = SessionLocal()
+    
+    left_dataset = (
+        db.query(DataSource).
+        filter(DataSource.id == request.left_dataset_id).
+        first()
+    )
+
+    right_dataset = (
+        db.query(DataSource).
+        filter(DataSource.id == request.right_dataset_id).
+        first()
+    )
+    
+    if not left_dataset or not right_dataset:
+        db.close()
+        return{
+            "ERROR": "One or both datasets not found"
+        }
+        
+    left_df = pd.read_csv(left_dataset.file_path)
+    right_df = pd.read_csv(right_dataset.file_path)
+    
+    if request.join_column not in left_df.columns:
+        db.close()
+        return {
+            "error":f"column '{request.join_column}' not found in right dataset"
+        }
+        
+    joined_df = pd.merge(
+        left_df,
+        right_df,
+        on = request.join_column
+    )
+    
+    new_filename = (
+        f"join_{request.left_dataset_id}_{request.right_dataset_id}.csv"
+    )
+    
+    new_filepath = f"uploads/{new_filename}"
+    
+    joined_df.to_csv(
+        new_filepath,
+        index = False
+    )
+    
+    new_source = DataSource(
+        filename=new_filename,
+        row_count=len(joined_df),
+        columns=list(joined_df.columns),
+        schema=detect_schema(joined_df),
+        file_path=new_filepath
+    )
+
+    db.add(new_source)
+    db.commit()
+    db.refresh(new_source)
+    result = {
+        "new_dataset_id": new_source.id,
+        "filename": new_filename,
+        "rows": len(joined_df)
+    }   
+    db.close()
     return result

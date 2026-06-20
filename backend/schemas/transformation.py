@@ -14,3 +14,10 @@ class RenameColumnRequest(BaseModel):
 class SortRequest(BaseModel):
     column: str
     ascending: bool
+    
+class JoinRequest(BaseModel):
+    left_dataset_id: int
+    right_dataset_id: int
+    join_column: str    
+
+    
