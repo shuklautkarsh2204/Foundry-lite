@@ -1,6 +1,7 @@
 from database.connection import engine
 from database.base import Base
-import models.datasrc
+from models.datasrc import DataSource
+from models.lineage import DatasetLineage
 
 Base.metadata.create_all(bind=engine)
 

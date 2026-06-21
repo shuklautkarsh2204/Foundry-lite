@@ -20,4 +20,7 @@ class JoinRequest(BaseModel):
     right_dataset_id: int
     join_column: str    
 
-    
+class AggregateRequest(BaseModel):
+    group_by: str
+    target_column: str
+    operation: str    

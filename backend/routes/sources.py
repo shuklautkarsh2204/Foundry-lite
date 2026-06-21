@@ -7,7 +7,8 @@ from models.datasrc import DataSource
 from services.schema_detector import detect_schema
 from database.session import get_db
 from models.datasrc import DataSource
-from schemas.transformation import FilterRequest, SelectColumnRequest, RenameColumnRequest, SortRequest, JoinRequest
+from schemas.transformation import FilterRequest, SelectColumnRequest, RenameColumnRequest, SortRequest, JoinRequest, AggregateRequest
+from models.lineage import DatasetLineage
 
 router = APIRouter()
 
@@ -165,7 +166,14 @@ def filter_dataset(source_id:int, request: FilterRequest):
     db.add(new_source)
     db.commit()
     db.refresh(new_source)
-
+    
+    lineage = DatasetLineage(
+        parent_dataset_id = dataset.id,
+        child_dataset_id = new_source.id,
+        operation = "filter"
+    )
+    db.add(lineage)
+    db.commit()
     result = {
         "new_dataset_id": new_source.id,
         "filename": new_filename,
@@ -217,6 +225,14 @@ def select_columns(source_id:int, request: SelectColumnRequest):
     db.add(new_source)
     db.commit()
     db.refresh(new_source)
+
+    lineage = DatasetLineage(
+        parent_dataset_id = dataset.id,
+        child_dataset_id = new_source.id,
+        operation = "select"
+    )
+    db.add(lineage)
+    db.commit()
 
     result = {
         "new_dataset_id": new_source.id,
@@ -273,6 +289,15 @@ def rename_column(
     db.add(new_source)
     db.commit()
     db.refresh(new_source)
+    
+    lineage = DatasetLineage(
+        parent_dataset_id = dataset.id,
+        child_dataset_id = new_source.id,
+        operation = "rename"
+    )
+    db.add(lineage)
+    db.commit()
+    
     result = {
         "new_dataset_id": new_source.id,
         "filename": new_filename,
@@ -327,6 +352,15 @@ def sort_dataset(
     db.add(new_source)
     db.commit()
     db.refresh(new_source)
+    
+    lineage = DatasetLineage(
+        parent_dataset_id = dataset.id,
+        child_dataset_id = new_source.id,
+        operation = "rename"
+    )
+    db.add(lineage)
+    db.commit()
+    
     result = {
         "new_dataset_id": new_source.id,
         "filename": new_filename,
@@ -397,6 +431,15 @@ def join_datasets(request: JoinRequest):
     db.add(new_source)
     db.commit()
     db.refresh(new_source)
+    
+    lineage = DatasetLineage(
+        parent_dataset_id = dataset.id,
+        child_dataset_id = new_source.id,
+        operation = "join"
+    )
+    db.add(lineage)
+    db.commit()
+    
     result = {
         "new_dataset_id": new_source.id,
         "filename": new_filename,
@@ -404,3 +447,95 @@ def join_datasets(request: JoinRequest):
     }   
     db.close()
     return result
+
+@router.post("/{source_id}/aggregate")
+def aggregate_dataset(
+    source_id: int,
+    request: AggregateRequest
+):
+    db = SessionLocal()
+    
+    dataset = (
+        db.query(DataSource).
+        filter(DataSource.id == source_id).
+        first()
+    )
+    
+    if not dataset:
+        db.close()
+        return {
+            "error": "Dataset not exist"
+        }
+    df = pd.read_csv(dataset.file_path)
+    if request.group_by not in df.columns:
+        db.close()
+        return {"error": "Group column not found"} 
+    if request.target_column not in df.columns:
+        db.close()
+        return {"error": "Target Column not found"}
+    
+    if request.operation == "sum":
+        result_df = (
+            df.groupby(request.group_by)[request.target_column].sum().reset_index()
+        )   
+    elif request.operation == "mean":
+        result_df = (
+            df.groupby(request.group_by)[request.target_column].mean().reset_index()
+        )
+    elif request.operation == "max":
+        result_df = (
+            df.groupby(request.group_by)[request.target_column].max().reset_index()
+        )
+    elif request.operation == "min":
+         result_df = (
+            df.groupby(request.group_by)[request.target_column].min().reset_index()
+        )
+    elif request.operation == "count":
+        result_df = (
+        df.groupby(request.group_by)[request.target_column]
+        .count()
+        .reset_index()
+    )     
+    else:
+        db.close()
+        return {
+            "error": "Unsupported operation"
+        }
+    new_filename = (
+        dataset.filename.replace(".csv", "_aggregated.csv")
+    )
+    
+    new_filepath = f"uploads/{new_filename}"
+    
+    result_df.to_csv(
+        new_filepath,
+        index = False
+    )
+    
+    new_source = DataSource(
+        filename=new_filename,
+        row_count=len(result_df),
+        columns=list(result_df.columns),
+        schema=detect_schema(result_df),
+        file_path=new_filepath
+    )
+
+    db.add(new_source)
+    db.commit()
+    db.refresh(new_source)
+    
+    lineage = DatasetLineage(
+        parent_dataset_id = dataset.id,
+        child_dataset_id = new_source.id,
+        operation = "aggregate"
+    )
+    db.add(lineage)
+    db.commit()
+    
+    result = {
+        "new_dataset_id": new_source.id,
+        "filename": new_filename,
+        "rows": len(result_df)
+    }   
+    db.close()
+    return result                      
