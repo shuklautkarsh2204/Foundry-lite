@@ -400,9 +400,14 @@ def join_datasets(request: JoinRequest):
     if request.join_column not in left_df.columns:
         db.close()
         return {
-            "error":f"column '{request.join_column}' not found in right dataset"
+            "error":f"column '{request.join_column}' not found in left dataset"
         }
-        
+    if request.join_column not in right_df.columns:
+        db.close()
+        return {
+            "error":f"column '{request.join_column}' not found in left dataset"
+        }
+  
     joined_df = pd.merge(
         left_df,
         right_df,
@@ -432,12 +437,18 @@ def join_datasets(request: JoinRequest):
     db.commit()
     db.refresh(new_source)
     
-    lineage = DatasetLineage(
-        parent_dataset_id = dataset.id,
+    lineage1 = DatasetLineage(
+        parent_dataset_id = left_dataset.id,
         child_dataset_id = new_source.id,
         operation = "join"
     )
-    db.add(lineage)
+    lineage2 = DatasetLineage(
+        parent_dataset_id = right_dataset.id,
+        child_dataset_id = new_source.id,
+        operation = "join"
+    )
+    db.add(lineage1)
+    db.add(lineage2)
     db.commit()
     
     result = {
@@ -538,4 +549,32 @@ def aggregate_dataset(
         "rows": len(result_df)
     }   
     db.close()
-    return result                      
+    return result  
+
+@router.get("/{source_id}/lineage")
+def get_lineage(source_id: int):
+    
+    db = SessionLocal()
+    
+    lineage_records = (
+        db.query(DatasetLineage).
+        filter(
+            DatasetLineage.child_dataset_id == source_id
+        ).all()
+    )
+    
+    result = []
+    
+    for record in lineage_records:
+        result.append({
+            "parent_dataset_id": record.parent_dataset_id,
+            "child_dataset_id": record.child_dataset_id,
+            "operation": record.operation
+        })       
+     
+    db.close()
+    
+    return {
+        "dataset_id": source_id,
+        "history": result
+    }           
