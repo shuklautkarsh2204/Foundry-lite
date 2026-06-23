@@ -7,7 +7,7 @@ from models.datasrc import DataSource
 from services.schema_detector import detect_schema
 from database.session import get_db
 from models.datasrc import DataSource
-from schemas.transformation import FilterRequest, SelectColumnRequest, RenameColumnRequest, SortRequest, JoinRequest, AggregateRequest
+from schemas.transformation import FilterRequest, SelectColumnRequest, RenameColumnRequest, SortRequest, JoinRequest, AggregateRequest, RelationshipRequest
 from models.lineage import DatasetLineage
 
 router = APIRouter()
@@ -577,4 +577,57 @@ def get_lineage(source_id: int):
     return {
         "dataset_id": source_id,
         "history": result
-    }           
+    } 
+
+@router.post("/relationships/discover")
+def relationship_discovery(request: RelationshipRequest):
+    db = SessionLocal()
+    dataset_1 = (
+        db.query(DataSource).
+        filter(DataSource.id == request.dataset1_id).
+        first()
+    )
+    dataset_2 = (
+        db.query(DataSource).
+        filter(DataSource.id == request.dataset2_id).
+        first()
+    )
+    if not dataset_1 or not dataset_2:
+        db.close()
+        return {
+            "error": "either dataset 1 or dataset 2 not exists."
+        }
+    df1 = pd.read_csv(dataset_1.file_path)
+    df2 = pd.read_csv(dataset_2.file_path)
+    
+    common_columns = (
+        set(df1.columns) & set(df2.columns)
+    )
+    
+    if not common_columns:
+        db.close()
+        return {
+            "error": "No common columns found"
+        }
+    relationships = []
+    
+    for column in common_columns:
+        values1 = set(df1[column].astype(str))    
+        values2 = set(df2[column].astype(str))    
+        intersection = values1 & values2 
+        matching_pct = (len(intersection) / min(len(values1), len(values2)))*100
+        relationships.append({
+            "column": column,
+            "matching_%": round(matching_pct, 2)
+        })   
+    relationships.sort(
+        key = lambda x: x["matching_%"],
+        reverse= True
+    )
+    
+    db.close()   
+    return {
+        "dataset1": dataset_1.filename,
+        "dataset2": dataset_2.filename,
+        "relationships": relationships
+    } 

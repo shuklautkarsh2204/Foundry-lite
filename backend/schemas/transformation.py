@@ -24,3 +24,7 @@ class AggregateRequest(BaseModel):
     group_by: str
     target_column: str
     operation: str    
+
+class RelationshipRequest(BaseModel):
+    dataset1_id: int
+    dataset2_id: int    
