@@ -5,14 +5,21 @@ import os
 from database.session import SessionLocal
 from models.datasrc import DataSource
 from services.schema_detector import detect_schema
+from services.analytics import build_profile, build_quality_report, build_ontology
 from database.session import get_db
-from models.datasrc import DataSource
 from schemas.transformation import FilterRequest, SelectColumnRequest, RenameColumnRequest, SortRequest, JoinRequest, AggregateRequest, RelationshipRequest
 from models.lineage import DatasetLineage
 
 router = APIRouter()
 
 os.makedirs("uploads", exist_ok=True)
+
+
+def _get_dataset_or_error(db: Session, source_id: int):
+    dataset = db.query(DataSource).filter(DataSource.id == source_id).first()
+    if not dataset:
+        return None
+    return dataset
 
 
 @router.post("/upload")
@@ -56,7 +63,7 @@ async def upload_source(
     }
 
 
-@router.get("/sources")
+@router.get("")
 def get_sources():
 
     db = SessionLocal()
@@ -97,6 +104,132 @@ def get_source(source_id: int):
         "schema": dataset.schema,
         "uploaded_at": dataset.uploaded_at
     }
+
+@router.get("/{source_id}/profile")
+def get_source_profile(source_id: int):
+    db = SessionLocal()
+    dataset = _get_dataset_or_error(db, source_id)
+    if not dataset:
+        db.close()
+        return {"error": "Dataset not found"}
+
+    df = pd.read_csv(dataset.file_path)
+    profile = build_profile(df)
+    db.close()
+    return {
+        "dataset_id": dataset.id,
+        "filename": dataset.filename,
+        "profile": profile,
+    }
+
+
+@router.get("/{source_id}/quality-report")
+def get_quality_report(source_id: int):
+    db = SessionLocal()
+    dataset = _get_dataset_or_error(db, source_id)
+    if not dataset:
+        db.close()
+        return {"error": "Dataset not found"}
+
+    df = pd.read_csv(dataset.file_path)
+    report = build_quality_report(df)
+    db.close()
+    return {
+        "dataset_id": dataset.id,
+        "filename": dataset.filename,
+        "quality_report": report,
+    }
+
+
+@router.post("/{source_id}/ontology/generate")
+def generate_ontology(source_id: int):
+    db = SessionLocal()
+    dataset = _get_dataset_or_error(db, source_id)
+    if not dataset:
+        db.close()
+        return {"error": "Dataset not found"}
+
+    df = pd.read_csv(dataset.file_path)
+    ontology = build_ontology(df, dataset.filename)
+    db.close()
+    return {
+        "dataset_id": dataset.id,
+        "filename": dataset.filename,
+        "ontology": ontology,
+    }
+
+
+@router.get("/{source_id}/metrics")
+def get_metrics(source_id: int):
+    db = SessionLocal()
+    dataset = _get_dataset_or_error(db, source_id)
+    if not dataset:
+        db.close()
+        return {"error": "Dataset not found"}
+
+    df = pd.read_csv(dataset.file_path)
+    quality = build_quality_report(df)
+    profile = build_profile(df)
+    db.close()
+    return {
+        "dataset_id": dataset.id,
+        "filename": dataset.filename,
+        "row_count": len(df),
+        "column_count": len(df.columns),
+        "null_total": quality["missing_value_count"],
+        "duplicate_rows": quality["duplicate_rows"],
+        "profile": profile,
+    }
+
+
+@router.get("/{source_id}/graph")
+def get_graph(source_id: int):
+    db = SessionLocal()
+    dataset = _get_dataset_or_error(db, source_id)
+    if not dataset:
+        db.close()
+        return {"error": "Dataset not found"}
+
+    df = pd.read_csv(dataset.file_path)
+    nodes = [{"id": column, "label": column, "type": "column"} for column in df.columns]
+    edges = []
+    for idx in range(min(3, len(df.columns))):
+        source_col = df.columns[idx]
+        if idx + 1 < len(df.columns):
+            target_col = df.columns[idx + 1]
+            edges.append({"source": source_col, "target": target_col, "type": "sequence"})
+    db.close()
+    return {
+        "dataset_id": dataset.id,
+        "filename": dataset.filename,
+        "nodes": nodes,
+        "edges": edges,
+    }
+
+
+@router.get("/{source_id}/ai-context")
+def get_ai_context(source_id: int):
+    db = SessionLocal()
+    dataset = _get_dataset_or_error(db, source_id)
+    if not dataset:
+        db.close()
+        return {"error": "Dataset not found"}
+
+    df = pd.read_csv(dataset.file_path)
+    profile = build_profile(df)
+    ontology = build_ontology(df, dataset.filename)
+    db.close()
+    return {
+        "dataset_id": dataset.id,
+        "filename": dataset.filename,
+        "context": {
+            "row_count": len(df),
+            "columns": list(df.columns),
+            "profile": profile,
+            "ontology": ontology,
+        },
+    }
+
 
 @router.get("/{source_id}/preview")
 def preview_source(source_id: int):
