@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Data-Forge (Foundry Lite)
 Software that establishes relationships between diffrent data and ofc many more 
 yet to be completed.
@@ -129,8 +128,5 @@ curl -X POST "http://localhost:8000/sources/relationships/discover" \
 - Expand lineage visualization and graph database support
 - Add end-to-end tests and CI automation
 
-## License
-This project is currently provided as-is. Update the license section once a project license has been chosen.
->>>>>>> e8e6e1c (Added README)
 
 
