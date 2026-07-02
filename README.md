@@ -1,7 +1,4 @@
-# Data-Forge (Foundry Lite)
-Software that establishes relationships between diffrent data and ofc many more 
-yet to be completed.
-=======
+
 # Foundry Lite (GraphForge AI)
 
 ## Overview
