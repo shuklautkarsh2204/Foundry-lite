@@ -48,5 +48,9 @@ joblib
 pytest
 pytest-asyncio
 
+# Frontend
+streamlit
+requests
+
 # Utilities
 python-dateutil
