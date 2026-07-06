@@ -2,13 +2,14 @@ from fastapi import APIRouter, UploadFile, Depends
 from sqlalchemy.orm import Session
 import pandas as pd
 import os
-from database.session import SessionLocal
-from models.datasrc import DataSource
-from services.schema_detector import detect_schema
-from services.analytics import build_profile, build_quality_report, build_ontology
-from database.session import get_db
-from schemas.transformation import FilterRequest, SelectColumnRequest, RenameColumnRequest, SortRequest, JoinRequest, AggregateRequest, RelationshipRequest
-from models.lineage import DatasetLineage
+
+from backend.database.session import SessionLocal
+from backend.models.datasrc import DataSource
+from backend.services.schema_detector import detect_schema
+from backend.services.analytics import build_profile, build_quality_report, build_ontology
+from backend.database.session import get_db
+from backend.schemas.transformation import FilterRequest, SelectColumnRequest, RenameColumnRequest, SortRequest, JoinRequest, AggregateRequest, RelationshipRequest
+from backend.models.lineage import DatasetLineage
 
 router = APIRouter()
 

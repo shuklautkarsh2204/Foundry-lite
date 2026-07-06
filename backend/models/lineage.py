@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String
-from database.base import Base
+from backend.database.base import Base
 
 class DatasetLineage(Base):
     __tablename__ = "dataset_lineage"

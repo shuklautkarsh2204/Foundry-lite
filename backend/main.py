@@ -1,8 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes.sources import router as source_router, relationship_discovery
+
+from backend.database.base import Base
+from backend.database.connection import engine
+from backend.routes.sources import router as source_router, relationship_discovery
 
 app = FastAPI(title="GraphForge AI")
+
+Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,

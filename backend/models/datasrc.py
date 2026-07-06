@@ -5,7 +5,7 @@ from sqlalchemy import JSON
 from sqlalchemy import DateTime
 from datetime import datetime, UTC
 
-from database.base import Base
+from backend.database.base import Base
 
 
 class DataSource(Base):

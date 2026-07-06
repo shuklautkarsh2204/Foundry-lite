@@ -1,6 +1,6 @@
 import pandas as pd
 
-from services.analytics import build_profile, build_quality_report, build_ontology
+from backend.services.analytics import build_profile, build_quality_report, build_ontology
 
 
 def test_build_profile_reports_missing_and_numeric_stats():
