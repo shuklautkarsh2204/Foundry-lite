@@ -1,129 +1,107 @@
 
-# Foundry Lite (GraphForge AI)
+# Foundry Lite
 
-## Overview
-Foundry Lite is a lightweight data discovery and transformation backend built with FastAPI. It provides dataset ingestion, schema detection, profiling, data quality reporting, dataset transformations, lineage tracking, and relationship discovery between uploaded CSV datasets.
+Foundry Lite is a lightweight data discovery and analytics platform with a FastAPI backend and a React-based frontend. It lets you upload CSV datasets, inspect profiles and quality metrics, trace lineage, discover relationships, and explore data with AI-assisted workflows through a modern web UI.
 
-## Key Features
-- Upload CSV datasets and store metadata in PostgreSQL
-- Detect column schema and generate dataset profiles
-- Produce data quality reports with missing values, duplicates, and empty string counts
-- Generate a simple ontology based on dataset column names
-- Preview dataset contents and metrics
-- Perform dataset transformations: filter, select columns, rename columns, sort, join, and aggregate
-- Track lineage for transformed datasets
-- Discover relationships between datasets using common columns
+## What’s included
+- A polished landing page and dashboard for quick navigation
+- Dataset upload and source management
+- Dataset detail views for preview, schema, statistics, quality, transformations, lineage, relationships, ontology, and AI summaries
+- Relationship discovery between datasets
+- An AI-oriented experience for asking questions about uploaded data
 
-## Architecture
-- `backend/main.py` - FastAPI application entry point
-- `backend/routes/sources.py` - API endpoints for dataset ingestion, discovery, profiling, transformations, and lineage
-- `backend/models/datasrc.py` - SQLAlchemy model for uploaded datasets
-- `backend/models/lineage.py` - SQLAlchemy model for dataset lineage tracking
-- `backend/services/schema_detector.py` - Simple data type inference for CSV columns
-- `backend/services/analytics.py` - Profile, quality report, and ontology builder utilities
-- `backend/database/connection.py` - PostgreSQL connection configuration
-- `backend/database/session.py` - SQLAlchemy session management
-- `backend/create_tables.py` - Creates the database tables
-- `backend/schemas/transformation.py` - Pydantic request models for transformations and relationship discovery
+## Tech stack
+- Backend: FastAPI, SQLAlchemy, Pydantic, PostgreSQL
+- Frontend: React, Vite, Tailwind CSS, React Router, TanStack Query, Recharts, Cytoscape
+
+## Project structure
+- backend/ - API server, database models, routes, services, and schema logic
+- frontend/ - Vite + React application with pages for dashboard, uploads, datasets, relationships, and AI workflows
+- docker-compose.yml - PostgreSQL service for local development
 
 ## Prerequisites
-- Python 3.11+ (recommended)
-- PostgreSQL 16 or compatible PostgreSQL service
-- Docker and Docker Compose (optional, for local database setup)
+- Python 3.11+
+- Node.js 18+
+- Docker and Docker Compose (for the local PostgreSQL service)
 
-## Installation
+## Setup
 1. Create and activate a Python virtual environment:
    ```bash
    python3 -m venv .venv
    source .venv/bin/activate
    ```
-2. Install dependencies:
+2. Install Python dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-3. Start PostgreSQL with Docker Compose:
+3. Install frontend dependencies:
+   ```bash
+   npm install --prefix frontend
+   ```
+4. Start PostgreSQL:
    ```bash
    docker compose up -d
    ```
-4. Create the database tables:
+5. Create the database tables:
    ```bash
    cd backend
    python create_tables.py
    ```
 
 ## Configuration
-The backend is currently configured to connect to PostgreSQL at:
-- `postgresql://postgres:postgres@localhost:5432/graphforge`
+The backend connects to PostgreSQL using:
+- postgresql://postgres:postgres@localhost:5432/graphforge
 
-If you need to change the connection, update `backend/database/connection.py`.
+If needed, update the connection settings in backend/database/connection.py.
 
-## Running the Application
+## Running locally
+Start the backend from the repository root:
+```bash
+python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
+```
+
+Start the frontend in a second terminal:
+```bash
+npm run dev --prefix frontend
+```
+
+Open the app at:
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8000
+- API docs: http://localhost:8000/docs
+
+## Useful scripts
 From the repository root:
 ```bash
-cd backend
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+npm run dev              # starts the frontend via Vite
+npm run dev:backend      # starts the FastAPI backend
+npm run build            # builds the frontend for production
+npm run install:all      # installs frontend dependencies
 ```
 
-Open the API docs at:
-- `http://localhost:8000/docs`
+## API highlights
+- POST /sources/upload - Upload a CSV dataset
+- GET /sources - List uploaded datasets
+- GET /sources/{source_id} - Retrieve dataset metadata
+- GET /sources/{source_id}/preview - Preview rows
+- GET /sources/{source_id}/profile - View dataset profile
+- GET /sources/{source_id}/quality-report - View data quality statistics
+- POST /sources/{source_id}/filter - Filter rows
+- POST /sources/{source_id}/select-columns - Select a subset of columns
+- POST /sources/{source_id}/aggregate - Aggregate values
+- GET /sources/{source_id}/lineage - Retrieve lineage history
+- POST /relationships/discover - Discover relationships between datasets
 
-## API Endpoints
-### Dataset Management
-- `POST /sources/upload` - Upload a CSV dataset
-- `GET /sources` - List all uploaded datasets
-- `GET /sources/{source_id}` - Get dataset metadata
-- `GET /sources/{source_id}/preview` - Preview the first 20 rows
+## Notes
+- Uploaded files are stored in the uploads directory for local development.
+- The frontend communicates with the backend through the Vite proxy configured in frontend/vite.config.js.
 
-### Analytics
-- `GET /sources/{source_id}/profile` - Get dataset profile
-- `GET /sources/{source_id}/quality-report` - Get quality report
-- `GET /sources/{source_id}/ontology/generate` - Generate ontology details
-- `GET /sources/{source_id}/metrics` - Get dataset metrics
-- `GET /sources/{source_id}/graph` - Generate a basic graph view for dataset columns
-- `GET /sources/{source_id}/ai-context` - Generate AI-friendly dataset context
-
-### Data Transformations
-- `POST /sources/{source_id}/filter` - Filter rows by column value
-- `POST /sources/{source_id}/select-columns` - Select a subset of columns
-- `POST /sources/{source_id}/rename-column` - Rename a dataset column
-- `POST /sources/{source_id}/sort` - Sort dataset rows by a column
-- `POST /sources/join` - Join two datasets on a shared column
-- `POST /sources/{source_id}/aggregate` - Aggregate dataset values by a grouping column
-
-### Lineage and Relationships
-- `GET /sources/{source_id}/lineage` - Get lineage history for a dataset
-- `POST /sources/relationships/discover` - Discover common column relationships between two datasets
-
-## Example Requests
-Upload a dataset:
-```bash
-curl -X POST "http://localhost:8000/sources/upload" \
-  -F "file=@backend/uploads/customers.csv"
-```
-
-Get dataset profile:
-```bash
-curl "http://localhost:8000/sources/1/profile"
-```
-
-Discover relationships:
-```bash
-curl -X POST "http://localhost:8000/sources/relationships/discover" \
-  -H "Content-Type: application/json" \
-  -d '{"dataset1_id": 1, "dataset2_id": 2}'
-```
-
-## Project Notes
-- Uploaded data is stored in `backend/uploads`
-- The project currently uses PostgreSQL for metadata storage
-- The service is designed as a backend API and does not include a frontend UI
-
-## Future Improvements
+## Roadmap
 - Add authentication and authorization
-- Support additional file formats (Excel, JSON, Parquet)
-- Add asynchronous task processing for large datasets
-- Expand lineage visualization and graph database support
-- Add end-to-end tests and CI automation
+- Support more file formats such as Excel, JSON, and Parquet
+- Improve AI-driven analysis and visualization
+- Expand lineage and graph experiences
+- Add automated tests and CI coverage
 
 
 
