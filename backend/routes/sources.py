@@ -731,6 +731,13 @@ def relationship_discovery(request: RelationshipRequest):
         return {
             "error": "either dataset 1 or dataset 2 not exists."
         }
+
+    if request.datase1_id == request.dataset2_id:
+        db.close()
+        raise HTTPException(
+            status_code=400,
+            detail="Both dataset ids are same"
+        ) 
     df1 = pd.read_csv(dataset_1.file_path)
     df2 = pd.read_csv(dataset_2.file_path)
     
