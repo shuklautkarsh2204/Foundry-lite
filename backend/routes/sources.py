@@ -11,6 +11,8 @@ from backend.database.session import get_db
 from backend.schemas.transformation import FilterRequest, SelectColumnRequest, RenameColumnRequest, SortRequest, JoinRequest, AggregateRequest, RelationshipRequest
 from backend.models.lineage import DatasetLineage
 
+from difflab import SequenceMatcher
+
 router = APIRouter()
 
 os.makedirs("uploads", exist_ok=True)
@@ -713,6 +715,25 @@ def get_lineage(source_id: int):
         "history": result
     } 
 
+def column_similarity(col1,col2):
+    return SequenceMatcher(
+        None,
+        col1.lower().strip(),
+        col2.lower().strip()
+    ).ratio()
+
+def datatype_score(dtype1, dtype2):
+    if dtype1 == dtype2:
+        return 20
+
+    if (
+        "int" in dtype1 and "float" in dtype2
+    ) or (
+        "float" in dtype1 and "int" in dtype2
+    ):
+        return 15    
+    return 0
+
 @router.post("/relationships/discover")
 def relationship_discovery(request: RelationshipRequest):
     db = SessionLocal()
@@ -741,31 +762,44 @@ def relationship_discovery(request: RelationshipRequest):
     df1 = pd.read_csv(dataset_1.file_path)
     df2 = pd.read_csv(dataset_2.file_path)
     
-    common_columns = (
-        set(df1.columns) & set(df2.columns)
-    )
     
-    if not common_columns:
-        db.close()
-        return {
-            "error": "No common columns found"
-        }
     relationships = []
     
-    for column in common_columns:
-        values1 = set(df1[column].astype(str))    
-        values2 = set(df2[column].astype(str))    
-        intersection = values1 & values2 
-        matching_pct = (len(intersection) / min(len(values1), len(values2)))*100
-        relationships.append({
-            "column": column,
-            "matching_%": round(matching_pct, 2)
-        })   
-    relationships.sort(
-        key = lambda x: x["matching_%"],
-        reverse= True
+    for col1 in df1.columns:
+        for col2 in df2.columns:
+            similarity = column_similarity(col1, col2)
+
+            dtype1 = str(df1[col1].dtype)
+            dtype2 = str(df1[col2].dtype)
+            type_score = datatype_score(dtype1, dtype2)
+
+            if similarity < 0.70: # less than 70 pct.
+                continue
+            values1 = set(df1[col1].dropna().astype(str))    
+            values2 = set(df1[col2].dropna().astype(str))    
+
+            intersection = values1 & values2
+            matching_pct = (
+                len(intersection)/min(len(values1), len(values2))
+            )*100
+            relationships.append(
+                "dataset1_column": col1,
+
+                "dataset2_column": col2,
+
+                "name_similarity": round(similarity * 100, 2),
+
+                "type_score": type_score,
+
+                "matching_%": round(matching_pct, 2)
+            )
+    relationship.sort(
+        key = lambda x: (
+            x["matching_%"],
+            x["name_similarity"]
+        ),
+        reverse = True
     )
-    
     db.close()   
     return {
         "dataset1": dataset_1.filename,
