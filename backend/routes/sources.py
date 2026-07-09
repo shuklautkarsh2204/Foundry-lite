@@ -11,7 +11,7 @@ from backend.database.session import get_db
 from backend.schemas.transformation import FilterRequest, SelectColumnRequest, RenameColumnRequest, SortRequest, JoinRequest, AggregateRequest, RelationshipRequest
 from backend.models.lineage import DatasetLineage
 
-from difflab import SequenceMatcher
+from difflib import SequenceMatcher
 
 router = APIRouter()
 
