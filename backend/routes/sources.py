@@ -733,6 +733,7 @@ def datatype_score(dtype1, dtype2):
     ):
         return 15    
     return 0
+      
 
 @router.post("/relationships/discover")
 def relationship_discovery(request: RelationshipRequest):
@@ -783,7 +784,7 @@ def relationship_discovery(request: RelationshipRequest):
             matching_pct = (
                 len(intersection)/min(len(values1), len(values2))
             )*100
-            relationships.append(
+            relationships.append({
                 "dataset1_column": col1,
 
                 "dataset2_column": col2,
@@ -793,8 +794,8 @@ def relationship_discovery(request: RelationshipRequest):
                 "type_score": type_score,
 
                 "matching_%": round(matching_pct, 2)
-            )
-    relationship.sort(
+            })
+    relationships.sort(
         key = lambda x: (
             x["matching_%"],
             x["name_similarity"]
