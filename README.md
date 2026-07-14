@@ -1,107 +1,401 @@
+<div align="center">
 
-# Foundry Lite
+# 🚀 Foundry Lite
+### AI-Powered Data Discovery • Relationship Intelligence • Knowledge Graphs
 
-Foundry Lite is a lightweight data discovery and analytics platform with a FastAPI backend and a React-based frontend. It lets you upload CSV datasets, inspect profiles and quality metrics, trace lineage, discover relationships, and explore data with AI-assisted workflows through a modern web UI.
+<img src="https://img.shields.io/badge/Status-Active-success?style=for-the-badge"/>
+<img src="https://img.shields.io/badge/FastAPI-Backend-009688?style=for-the-badge&logo=fastapi"/>
+<img src="https://img.shields.io/badge/React-Frontend-61DAFB?style=for-the-badge&logo=react"/>
+<img src="https://img.shields.io/badge/PostgreSQL-Database-336791?style=for-the-badge&logo=postgresql"/>
+<img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge"/>
 
-## What’s included
-- A polished landing page and dashboard for quick navigation
-- Dataset upload and source management
-- Dataset detail views for preview, schema, statistics, quality, transformations, lineage, relationships, ontology, and AI summaries
-- Relationship discovery between datasets
-- An AI-oriented experience for asking questions about uploaded data
+### Transform scattered business data into connected intelligence.
 
-## Tech stack
-- Backend: FastAPI, SQLAlchemy, Pydantic, PostgreSQL
-- Frontend: React, Vite, Tailwind CSS, React Router, TanStack Query, Recharts, Cytoscape
+*Inspired by modern enterprise data platforms while remaining lightweight, open-source, and developer friendly.*
 
-## Project structure
-- backend/ - API server, database models, routes, services, and schema logic
-- frontend/ - Vite + React application with pages for dashboard, uploads, datasets, relationships, and AI workflows
-- docker-compose.yml - PostgreSQL service for local development
+---
 
-## Prerequisites
-- Python 3.11+
-- Node.js 18+
-- Docker and Docker Compose (for the local PostgreSQL service)
+</div>
 
-## Setup
-1. Create and activate a Python virtual environment:
-   ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate
-   ```
-2. Install Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Install frontend dependencies:
-   ```bash
-   npm install --prefix frontend
-   ```
-4. Start PostgreSQL:
-   ```bash
-   docker compose up -d
-   ```
-5. Create the database tables:
-   ```bash
-   cd backend
-   python create_tables.py
-   ```
+# ✨ What is Foundry Lite?
 
-## Configuration
-The backend connects to PostgreSQL using:
-- postgresql://postgres:postgres@localhost:5432/graphforge
+**Foundry Lite** is an AI-powered data intelligence platform that enables organizations to upload datasets, automatically understand their structure, discover hidden relationships, build knowledge graphs, analyze data quality, track lineage, and interact with data using AI.
 
-If needed, update the connection settings in backend/database/connection.py.
+Instead of manually exploring spreadsheets and databases, users can simply upload their data and instantly gain insights through interactive visualizations and intelligent analysis.
 
-## Running locally
-Start the backend from the repository root:
-```bash
-python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
+---
+
+# 🎯 Core Features
+
+## 📂 Data Upload
+
+- CSV Upload
+- Dataset Management
+- Source Catalog
+- Metadata Extraction
+
+---
+
+## 📊 Data Profiling
+
+Automatically generates
+
+- Dataset Statistics
+- Column Information
+- Missing Values
+- Data Types
+- Value Distribution
+- Numerical Summaries
+
+---
+
+## 🧹 Data Quality Engine
+
+Analyze your data before using it.
+
+✔ Missing Values
+
+✔ Duplicate Records
+
+✔ Invalid Values
+
+✔ Null Percentage
+
+✔ Completeness Score
+
+✔ Consistency Metrics
+
+---
+
+## 🔍 Relationship Discovery
+
+Automatically identifies relationships between uploaded datasets.
+
+Supports discovery based on
+
+- Common Columns
+- Matching Values
+- Primary Key Detection
+- Foreign Key Detection
+- Similar Schema Analysis
+
+Visual relationship graphs help users understand how datasets connect.
+
+---
+
+## 🌐 Knowledge Graph Ready
+
+Designed to progressively convert uploaded datasets into interconnected business knowledge.
+
+Future graph capabilities include
+
+- Entity Linking
+- Ontology Generation
+- Semantic Search
+- Multi-hop Relationships
+
+---
+
+## 📈 Dataset Visualization
+
+Explore datasets through an intuitive dashboard.
+
+- Interactive Charts
+- Statistical Cards
+- Distribution Graphs
+- Dataset Preview
+- Table Explorer
+
+---
+
+## 🔄 Data Lineage
+
+Track every transformation performed on a dataset.
+
+View
+
+- Source Dataset
+- Operations Applied
+- Transformation History
+- Processing Flow
+
+---
+
+## 🤖 AI Assistant
+
+Ask questions about uploaded datasets in natural language.
+
+Examples
+
+> Show customers with highest revenue
+
+> Which products are underperforming?
+
+> Find duplicate customer records
+
+> Summarize this dataset
+
+---
+
+# 🏗 Architecture
+
+```text
+                 +----------------+
+                 |    React UI    |
+                 +-------+--------+
+                         |
+                         |
+                 REST APIs
+                         |
+                 +-------v--------+
+                 |    FastAPI     |
+                 +-------+--------+
+                         |
+     --------------------------------------------
+     |          |            |                  |
+     |          |            |                  |
+Data Engine  Profiling   Relationship     AI Context
+               Engine      Discovery        Builder
+     |          |            |                  |
+     --------------------------------------------
+                         |
+                  PostgreSQL Database
+                         |
+                  Uploaded CSV Files
 ```
 
-Start the frontend in a second terminal:
+---
+
+# 🖥 Tech Stack
+
+## Backend
+
+- FastAPI
+- SQLAlchemy
+- Pydantic
+- PostgreSQL
+
+## Frontend
+
+- React
+- Vite
+- TailwindCSS
+- React Router
+- TanStack Query
+- Cytoscape
+- Recharts
+
+## Database
+
+- PostgreSQL
+
+---
+
+# 📁 Project Structure
+
+```text
+Foundry-Lite
+│
+├── backend
+│   ├── database
+│   ├── models
+│   ├── routes
+│   ├── services
+│   ├── schemas
+│   ├── utils
+│   └── main.py
+│
+├── frontend
+│   ├── src
+│   │   ├── pages
+│   │   ├── components
+│   │   ├── hooks
+│   │   ├── services
+│   │   └── assets
+│
+├── uploads
+├── docker-compose.yml
+└── README.md
+```
+
+---
+
+# ⚙ Installation
+
+## Clone Repository
+
+```bash
+git clone <repository-url>
+
+cd Foundry-Lite
+```
+
+---
+
+## Create Virtual Environment
+
+```bash
+python -m venv .venv
+```
+
+Windows
+
+```bash
+.venv\Scripts\activate
+```
+
+Linux / macOS
+
+```bash
+source .venv/bin/activate
+```
+
+---
+
+## Install Backend
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Install Frontend
+
+```bash
+npm install --prefix frontend
+```
+
+---
+
+## Start PostgreSQL
+
+```bash
+docker compose up -d
+```
+
+---
+
+## Create Tables
+
+```bash
+cd backend
+
+python create_tables.py
+```
+
+---
+
+# ▶ Run Application
+
+Backend
+
+```bash
+python -m uvicorn backend.main:app --reload
+```
+
+Frontend
+
 ```bash
 npm run dev --prefix frontend
 ```
 
-Open the app at:
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:8000
-- API docs: http://localhost:8000/docs
+---
 
-## Useful scripts
-From the repository root:
-```bash
-npm run dev              # starts the frontend via Vite
-npm run dev:backend      # starts the FastAPI backend
-npm run build            # builds the frontend for production
-npm run install:all      # installs frontend dependencies
+# 🌍 Application URLs
+
+Frontend
+
+```
+http://localhost:5173
 ```
 
-## API highlights
-- POST /sources/upload - Upload a CSV dataset
-- GET /sources - List uploaded datasets
-- GET /sources/{source_id} - Retrieve dataset metadata
-- GET /sources/{source_id}/preview - Preview rows
-- GET /sources/{source_id}/profile - View dataset profile
-- GET /sources/{source_id}/quality-report - View data quality statistics
-- POST /sources/{source_id}/filter - Filter rows
-- POST /sources/{source_id}/select-columns - Select a subset of columns
-- POST /sources/{source_id}/aggregate - Aggregate values
-- GET /sources/{source_id}/lineage - Retrieve lineage history
-- POST /relationships/discover - Discover relationships between datasets
+Backend
 
-## Notes
-- Uploaded files are stored in the uploads directory for local development.
-- The frontend communicates with the backend through the Vite proxy configured in frontend/vite.config.js.
+```
+http://localhost:8000
+```
 
-## Roadmap
-- Add authentication and authorization
-- Support more file formats such as Excel, JSON, and Parquet
-- Improve AI-driven analysis and visualization
-- Expand lineage and graph experiences
-- Add automated tests and CI coverage
+Swagger Docs
 
+```
+http://localhost:8000/docs
+```
 
+---
 
+# 📡 API Highlights
+
+| Method | Endpoint | Description |
+|----------|----------|------------|
+| POST | /sources/upload | Upload Dataset |
+| GET | /sources | List Datasets |
+| GET | /sources/{id} | Dataset Metadata |
+| GET | /sources/{id}/preview | Preview Data |
+| GET | /sources/{id}/profile | Dataset Profile |
+| GET | /sources/{id}/quality-report | Quality Metrics |
+| POST | /relationships/discover | Discover Relationships |
+| GET | /sources/{id}/lineage | Dataset Lineage |
+
+---
+
+# 🚧 Roadmap
+
+- ✅ CSV Upload
+- ✅ Dataset Profiling
+- ✅ Quality Reports
+- ✅ Relationship Discovery
+- ✅ Lineage Tracking
+- ✅ AI Dataset Summary
+
+### Upcoming
+
+- Authentication
+- Excel Support
+- JSON Support
+- Parquet Support
+- Knowledge Graph Builder
+- Ontology Engine
+- Graph Database Integration
+- Natural Language SQL
+- Real-time Data Connectors
+- Collaboration Workspace
+
+---
+
+# 🤝 Contributing
+
+Contributions are welcome!
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push your branch
+5. Open a Pull Request
+
+---
+
+# ⭐ Why Foundry Lite?
+
+Unlike traditional BI tools, Foundry Lite focuses on **understanding data**, not just visualizing it.
+
+It combines:
+
+- 📊 Data Profiling
+- 🔍 Relationship Discovery
+- 🌐 Knowledge Graph Concepts
+- 🤖 AI Assistance
+- 🔄 Data Lineage
+- 📈 Business Intelligence
+
+into one lightweight platform.
+
+---
+
+<div align="center">
+
+# 🌟 If you like this project, consider giving it a Star!
+
+Made with ❤️ using FastAPI + React
+
+</div>
