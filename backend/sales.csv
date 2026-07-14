@@ -1,4 +1,4 @@
-cust_id,customer_id,price
+cust_id,name,price
 1,John,100
 2,Alice,200
 3,Bob,150
